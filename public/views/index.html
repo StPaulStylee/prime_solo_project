@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html ng-app='pokerApp'>
+
+  <head>
+    <meta charset="utf-8">
+    <title>Let's Play Hold'em</title>
+    <link rel='stylesheet' href='styles/main.css' />
+
+   <script src='/socket.io/socket.io.js'></script>
+
+    <script src='assets/vendors/angular.min.js'></script>
+    <script src='assets/vendors/angular-route.min.js'></script>
+    <script src='assets/vendors/socket.min.js'></script>
+    <script src='assets/vendors/jquery-3.1.1.min.js'></script>
+
+    <script src='scripts/app.module.js'></script>
+    <script src='scripts/app.config.js'></script>
+
+    <script src='scripts/login.controller.js'></script>
+    <script src='scripts/lobby.controller.js'></script>
+    <script src='scripts/register.controller.js'></script>
+    <script src='scripts/account.controller.js'></script>
+    <script src='scripts/profile.controller.js'></script>
+    <script src='scripts/game.controller.js'></script>
+
+    <script src='scripts/pokerSocket.service.js'></script>
+    <!--<script src='scripts/client.js'></script>-->
+    <base href='/' />
+  </head>
+
+  <body>
+    <ng-view>
+    </ng-view>
+  </body>
+</html>
