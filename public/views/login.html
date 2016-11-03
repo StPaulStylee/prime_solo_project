@@ -1,3 +1,16 @@
 <h1>Login</h1>
-<a href='/lobby'>Lobby</a>
-<a href='/register'>Register</a>
+<nav>
+<!--  <a href='/lobby'>Lobby</a> -->
+  <a href='/register'>Register</a>
+</nav>
+<form ng-submit='login.login()'>
+
+  <label for='username'>Username</label>
+  <input type='text' ng-model='login.username' />
+
+  <label for='password'>Password</label>
+  <input type='password' ng-model='login.password' />
+
+  <button type='submit'>Login</button>
+
+</form>

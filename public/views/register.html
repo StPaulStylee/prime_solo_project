@@ -1,2 +1,15 @@
 <h1>Register</h1>
-<a href='/login'>Now that you've registered, go back to Login</a>
+<nav>
+  <a href='/login'>Now that you've registered, go back to Login</a>
+</nav>
+<form ng-submit='register.register()'>
+
+  <label for='username'>Username:</label>
+  <input type='text' ng-model='register.username' />
+
+  <label for='password'>Password:</label>
+  <input type='password' ng-model='register.password' />
+
+  <button type='submit'>Register</button>
+  
+</form>

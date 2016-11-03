@@ -6,4 +6,4 @@ var config = {
 
 var pool = new pg.Pool(config);
 
-module.export = pool;
+module.exports = pool;

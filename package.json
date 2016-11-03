@@ -12,8 +12,12 @@
     "angular": "^1.5.8",
     "angular-route": "^1.5.8",
     "angular-socket-io": "^0.7.0",
+    "bcrypt": "^0.8.7",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
+    "express-session": "^1.14.2",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
     "pg": "^6.1.0",
     "socket.io": "^1.5.1"
   }

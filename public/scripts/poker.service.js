@@ -1,11 +1,9 @@
 angular.module('pokerApp')
-       .controller('LoginController', LoginController);
+       service('poker', pokerService);
 
-function LoginController($http, $location) { //Whats up with the $location?
-  console.log('LoginController Loaded');
-  var ctrl = this;
+function pokerService($http) {
 
-  ctrl.login  = function () {
+  this.login  = function () {
     console.log('From LoginController: Logging In...');
     $http.post('/login', {
       username: ctrl.username,
@@ -17,4 +15,5 @@ function LoginController($http, $location) { //Whats up with the $location?
       console.log('From LoginController: Error logging in!', error);
     });
   };
-}
+
+} // End of pokerService Function

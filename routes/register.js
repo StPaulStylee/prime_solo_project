@@ -1,9 +1,9 @@
-var router = ('express').Router();
+var router = require('express').Router();
 var User = require('../models/user');
 
 router.post('/', function(req, res){
-  console.log('Registering a New User');
-  User.create(req.body.username, req.body.password).then(function(){
+  console.log('Registering a New User', req);
+  User.create(req.body.type, req.body.username, req.body.password, req.body.bankroll).then(function(){
     res.sendStatus(201);
   }).catch(function(err){
     console.log('Error in /register', err);
@@ -11,4 +11,4 @@ router.post('/', function(req, res){
   });
 });
 
-module.export = router;
+module.exports = router;
