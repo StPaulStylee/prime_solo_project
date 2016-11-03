@@ -4,6 +4,7 @@ var app = express();
 var bodyParser = require('body-parser');
 var login = require('./routes/login');
 var register = require('./routes/register');
+var account = require('./routes/account');
 var authorization = require('./authorization/setup');
 var passport = require('passport');
 var session = require('express-session');
@@ -32,6 +33,7 @@ app.use(passport.session());
 //routes
 app.use('/login', login);
 app.use('/register', register);
+app.use('/account', account);
 
 app.get('/*', function(req, res){
   res.sendFile(path.join(__dirname, 'public/views/index.html'));

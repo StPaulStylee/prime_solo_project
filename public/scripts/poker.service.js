@@ -1,19 +1,19 @@
 angular.module('pokerApp')
-       service('poker', pokerService);
+       .service('poker', pokerService);
 
 function pokerService($http) {
 
-  this.login  = function () {
-    console.log('From LoginController: Logging In...');
-    $http.post('/login', {
-      username: ctrl.username,
-      password: ctrl.password
-    }).then(function(){
-      console.log('Login successful!');
-      $location.path('/lobby'); //Is this where we are redirected upon successful login?
-    }, function(error) {
-      console.log('From LoginController: Error logging in!', error);
+  this.login  = function (loginInfo) {
+    return $http.post('/login', loginInfo)
+      .then(function(response){
+        return response;
     });
   };
 
+  this.getBank = function() {
+    return $http.get('/account')
+      .then(function(response){
+        return response;
+      });
+  }
 } // End of pokerService Function

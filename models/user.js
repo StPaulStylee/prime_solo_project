@@ -20,8 +20,7 @@ function findByUsername(username) {
           console.log('Error querying the DB from user.js', err);
           reject(err);
         }
-        console.log('Result from query from user.js:', result);
-        console.log('Resulf form query result.rows[0]:', result.rows[0]);
+        console.log('Result from query result.rows[0]:', result.rows[0]);
         resolve(result.rows[0]);
       });
     });
@@ -47,8 +46,7 @@ function findById(id) {
           reject(err);
         }
 
-        console.log('Result from query from user.js:', result);
-        console.log('Resulf form query result.rows[0]:', result.rows[0]);
+        console.log('Result from query result.rows[0]:', result.rows[0]);
         resolve(result.rows[0]);
       });
     });
@@ -79,9 +77,7 @@ function create(type, username, password, bankroll) {
               console.log('Error querying the DB from user.js', err);
               return reject(err);
             }
-
-            console.log('Result from query from user.js:', result);
-            console.log('Resulf form query result.rows[0]:', result.rows[0]);
+            console.log('Result from query result.rows[0]:', result.rows[0]);
             resolve(result.rows[0]);
           });
         });
