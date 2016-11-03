@@ -7,7 +7,7 @@ function LobbyController(pokerSocket) {
   console.log('LobbyController loaded');
   pokerSocket.on('greeting', function(data){
     console.log('log from client:', data);
-    pokerSocket.emit('client reply', {'client reply': 'Bout fuckin' + ' time!'})
+    pokerSocket.emit('client reply', {'client reply': 'Bout time!'})
   });
 
 }

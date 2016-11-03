@@ -68,7 +68,7 @@ var server = app. listen(port, function () {
 var io = require('socket.io')(server);
 
 io.on('connection', function(socket){
-  console.log('On connection to server: ', 'A user connected!');
+  console.log('On connection to server: ', 'A user connected on socket: ', socket);
   socket.on('disconnect', function (){
     console.log('A user has disconnected');
   });
