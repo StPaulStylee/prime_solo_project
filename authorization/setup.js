@@ -38,6 +38,7 @@ function findAndComparePassword(username, password, done){
     User.comparePassword(user, password).then(function(isMatch){
       // indicate if their is a match
       if (isMatch) {
+        console.log('Just logged in:', user.username);
         done(null, user);
       } else {
         done(null, false);

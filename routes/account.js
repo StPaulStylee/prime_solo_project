@@ -9,7 +9,7 @@ router.get('/', function(req, res){
         res.sendStatus(500);
         return;
       }
-      client.query('SELECT * FROM users ',
+      client.query('SELECT * FROM users',
         function(err, result){
           if(err){
             console.log('Error querying the DB', err);

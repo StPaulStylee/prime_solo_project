@@ -1,3 +1,4 @@
+// Dependencies
 var express = require('express');
 var path = require('path');
 var app = express();
@@ -8,6 +9,10 @@ var account = require('./routes/account');
 var authorization = require('./authorization/setup');
 var passport = require('passport');
 var session = require('express-session');
+
+// Modules
+var Player = require('./modules/player');
+var Table = require('./modules/table');
 
 authorization.setup();
 
@@ -67,17 +72,35 @@ var server = app. listen(port, function () {
 });
 var io = require('socket.io')(server);
 
+// var connections = [];
+// var playersOnline = [];
+
 io.on('connection', function(socket){
-  console.log('On connection to server: ', 'A user connected on socket: ', socket);
-  socket.on('disconnect', function (){
-    console.log('A user has disconnected');
+  //connections.push(socket);
+  var table = new Table(socket.id);
+  //console.log('Connected: %s connected', connections.length);
+
+  socket.on('playerLoggedIn', function(data){
+    var player = new Player(socket.id, data.username);
+    //playersOnline.push(player);
+    table.players.push(player.username);
+    table.seatAssign();
+    console.log('Player created:', player);
+    console.log(player.username + ' just signed in and has been assigned to socket ID:' + socket.id);
+    console.log('Players at the table:', table.players);
+    console.log(table);
+    //console.log('Players Online: ', playersOnline);
   });
-  socket.emit('greeting', { greeting: 'Your angular socket is working!'});
-  socket.on('client reply', function (data){
-  console.log('log from server', data);
-  })
-  // socket.on('chat message', function(msg){
-  //   console.log('Message to emit: ', msg);
-  //   io.emit('chat message', msg);
-  // });
+
+  // socket.emit('greeting', { greeting: 'Your angular socket is working!'});
+  // socket.on('client reply', function (data){
+  // console.log('log from server', data);
+  // })
+
+  // disconnect
+  socket.on('disconnect', function (){
+    //connections.splice(connections.indexOf(socket), 1);
+    //console.log(playerOnline.username + ' has disconnected.');
+    console.log('A user has disconnected.');
+  });
 });

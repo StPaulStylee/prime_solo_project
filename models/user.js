@@ -20,7 +20,7 @@ function findByUsername(username) {
           console.log('Error querying the DB from user.js', err);
           reject(err);
         }
-        console.log('Result from query result.rows[0]:', result.rows[0]);
+        //console.log('Result from findByUsername query result.rows[0]:', result.rows[0]);
         resolve(result.rows[0]);
       });
     });
@@ -46,7 +46,7 @@ function findById(id) {
           reject(err);
         }
 
-        console.log('Result from query result.rows[0]:', result.rows[0]);
+        //console.log('Result from findById query result.rows[0]:', result.rows[0]);
         resolve(result.rows[0]);
       });
     });
@@ -77,7 +77,7 @@ function create(type, username, password, bankroll) {
               console.log('Error querying the DB from user.js', err);
               return reject(err);
             }
-            console.log('Result from query result.rows[0]:', result.rows[0]);
+            console.log('Result from create query result.rows[0]:', result.rows[0]);
             resolve(result.rows[0]);
           });
         });
@@ -94,7 +94,7 @@ function comparePassword(user, passwordToCompare) {
         return resolve(false);
       }
 
-      console.log('Success! Passwords Matched!', match);
+      //console.log('Success! Passwords Matched!', match);
       resolve(match);
     });
   });
