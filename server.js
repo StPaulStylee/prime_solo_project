@@ -10,10 +10,6 @@ var authorization = require('./authorization/setup');
 var passport = require('passport');
 var session = require('express-session');
 
-// Modules
-var Player = require('./modules/player');
-var Table = require('./modules/table');
-
 authorization.setup();
 
 const sessionConfig = {
@@ -72,30 +68,42 @@ var server = app. listen(port, function () {
 });
 var io = require('socket.io')(server);
 
+// Modules
+var Player = require('./modules/player');
+var Table = require('./modules/table');
+var Deck = require('./modules/deck');
+
+// Global Setup Variables
+var table = new Table('Fish Fry');
+
 // var connections = [];
 // var playersOnline = [];
 
 io.on('connection', function(socket){
   //connections.push(socket);
-  var table = new Table(socket.id);
   //console.log('Connected: %s connected', connections.length);
 
   socket.on('playerLoggedIn', function(data){
     var player = new Player(socket.id, data.username);
+    table.playerCount++
     //playersOnline.push(player);
     table.players.push(player.username);
     table.seatAssign();
-    console.log('Player created:', player);
-    console.log(player.username + ' just signed in and has been assigned to socket ID:' + socket.id);
-    console.log('Players at the table:', table.players);
-    console.log(table);
+    // console.log('Player created:', player);
+    // console.log(player.username + ' just signed in and has been assigned to socket ID:' + socket.id);
+    // console.log('Players at the table:', table.players);
+     console.log(table);
     //console.log('Players Online: ', playersOnline);
   });
 
-  // socket.emit('greeting', { greeting: 'Your angular socket is working!'});
-  // socket.on('client reply', function (data){
-  // console.log('log from server', data);
-  // })
+  socket.on('chatMessage', function(msg){
+    io.emit('chatMessage', msg);
+  });
+
+  socket.on('table', function(){
+    io.emit('table', table);
+  });
+
 
   // disconnect
   socket.on('disconnect', function (){

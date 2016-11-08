@@ -2,4 +2,17 @@
 <nav>
   <a href='/lobby'>Back to Lobby</a>
 </nav>
-<button type='submit' ng-submit='game.sit()'>Take Your Seat</button>
+<form ng-submit='game.sendChat()'>
+  <input type='text' ng-model='game.chat' />
+  <button type='submit'>Send</button>
+</form>
+<ul ng-repeat='(seat, name) in game.table.table.seats'>
+  <li>
+    {{ seat }}: {{ name }}
+  </li>
+</ul>
+<ul class='chat' ng-repeat='message in game.messages'>
+  <li>
+    {{message}}
+  </li>
+</ul>
