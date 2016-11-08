@@ -89,6 +89,8 @@ io.on('connection', function(socket){
     //playersOnline.push(player);
     table.players.push(player.username);
     table.seatAssign();
+    table.handAssign();
+    table.deck.makeDeck(1)
     // console.log('Player created:', player);
     // console.log(player.username + ' just signed in and has been assigned to socket ID:' + socket.id);
     // console.log('Players at the table:', table.players);
@@ -103,6 +105,12 @@ io.on('connection', function(socket){
   socket.on('table', function(){
     io.emit('table', table);
   });
+
+  socket.on('ready', function(){
+    table.deck.shuffle(3);
+    console.log(table.deck.cards);
+    io.emit('ready', table);
+  })
 
 
   // disconnect

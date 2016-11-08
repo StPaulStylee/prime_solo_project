@@ -7,6 +7,7 @@ function Table (tableName) {
   this.players = [];
   this.deck = new Deck();
   this.seats = {};
+  this.hands = {};
 }
 Table.prototype.seatAssign = function() {
   for(var i = 0; i < this.playerCount; i++) {
@@ -14,8 +15,10 @@ Table.prototype.seatAssign = function() {
   }
 };
 
-Table.prototype.deck = function() {
-
-}
+Table.prototype.handAssign = function() {
+  for(var i = 0; i < this.playerCount; i++) {
+    this.hands['Seat ' + (i + 1)] = [];
+  }
+};
 
 module.exports = Table;

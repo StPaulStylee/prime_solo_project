@@ -7,6 +7,8 @@ function GameController(poker, pokerSocket) {
   ctrl.messages = [];
   ctrl.players = poker.players;
   ctrl.table = poker;
+  ctrl.readyCount = 0;
+  console.log(ctrl.readyCount);
 
 
   //console.log(ctrl.table);
@@ -23,6 +25,14 @@ function GameController(poker, pokerSocket) {
     ctrl.messages.push(msg.msg);
     console.log(ctrl.messages);
   });
-
+  ctrl.readyCount = function () {
+    ctrl.readyCount++;
+    if (ctrl.readyCount = 2) {
+      pokerSocket.emit('ready');
+    }
+  };
+  pokerSocket.on('ready', function(table){
+    console.log(table);
+  })
 
 }
