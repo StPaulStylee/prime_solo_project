@@ -5,6 +5,7 @@ function pokerService($http, pokerSocket) {
   var service = this;
   service.players = [];
   service.table = {};
+  service.currentPlayer = '';
 
 
   service.login  = function (loginInfo) {
@@ -31,6 +32,14 @@ function pokerService($http, pokerSocket) {
     // for(var i = 0; i < data.playerCount; i++) {
     //   service.table.push(data['Seat ' + (i + 1)]);
     // }
-    console.log(service.table);
+    //console.log(service.table);
   });
+
+  service.setCurrentPlayer = function (player) {
+    service.currentPlayer = player;
+  }
+
+  service.getCurrentPlayer = function () {
+    return service.currentPlayer;
+  }
 } // End of pokerService Function

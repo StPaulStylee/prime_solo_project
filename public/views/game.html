@@ -6,9 +6,9 @@
   <input type='text' ng-model='game.chat' />
   <button type='submit'>Send</button>
 </form>
-<ul ng-repeat='(seat, name) in game.table.table.seats'>
+<ul ng-repeat=' player in game.table.players'>
   <li>
-    {{ seat }}: {{ name }}
+    Seat {{ player.seat }}: {{ player.username }}
   </li>
 </ul>
 <ul class='chat' ng-repeat='message in game.messages'>
@@ -16,4 +16,15 @@
     {{message}}
   </li>
 </ul>
-<button ng-click='game.readyCount()'>Ready!</button>
+<button ng-click='game.ready()'>Ready!</button>
+<section class='player-hud'>
+  <div class='player-chat'>
+
+  </div>
+  <div class='player-cards'>
+    {{game.card1}} {{game.card2}}
+  </div>
+  <div class='player-action'>
+
+  </div>
+</section>

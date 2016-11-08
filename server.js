@@ -84,17 +84,19 @@ io.on('connection', function(socket){
   //console.log('Connected: %s connected', connections.length);
 
   socket.on('playerLoggedIn', function(data){
+    console.log('Data from login:', data);
     var player = new Player(socket.id, data.username);
     table.playerCount++
     //playersOnline.push(player);
-    table.players.push(player.username);
+    table.players.push(player);
     table.seatAssign();
-    table.handAssign();
-    table.deck.makeDeck(1)
+    console.log('Table from Login: ', table);
+    // table.handAssign();
+    // table.deck.makeDeck(1)
     // console.log('Player created:', player);
     // console.log(player.username + ' just signed in and has been assigned to socket ID:' + socket.id);
     // console.log('Players at the table:', table.players);
-     console.log(table);
+    //console.log(table);
     //console.log('Players Online: ', playersOnline);
   });
 
@@ -107,10 +109,33 @@ io.on('connection', function(socket){
   });
 
   socket.on('ready', function(){
-    table.deck.shuffle(3);
-    console.log(table.deck.cards);
+    table.readyCount++;
+    console.log(table.readyCount);
+    if(table.readyCount == 2){
+      table.deck.makeDeck(1);
+      table.deck.shuffle(3);
+      for(var i = 0; i < table.playerCount; i++) {
+        table.players[i].hand.push(table.deck.deal());
+      }
+    for(var i = 0; i < table.playerCount; i++) {
+      table.players[i].hand.push(table.deck.deal());
+    }
     io.emit('ready', table);
-  })
+  }
+    //console.log(table.deck.cards);
+  });
+
+  // socket.on('start', function(){
+  //   console.log('Recieved Start!')
+  //   for(var i = 0; i < table.playerCount; i++) {
+  //     table.hands['Seat ' + (i + 1)].push(table.deck.deal());
+  //   }
+  //   for(var i = 0; i < table.playerCount; i++) {
+  //     table.hands['Seat ' + (i + 1)].push(table.deck.deal());
+  //   }
+  //   io.emit('table', table);
+  //   console.log(table);
+  // });
 
 
   // disconnect

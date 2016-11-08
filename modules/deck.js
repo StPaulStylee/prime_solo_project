@@ -1,4 +1,6 @@
 // Contructors buiit from demo: www.brainjar.com/js/cards/default.asp
+var Table = require('./table');
+
 function Card(rank, suit) {
   this.rank = rank;
   this.suit = suit;

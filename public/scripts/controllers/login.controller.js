@@ -10,6 +10,7 @@ function LoginController(poker, pokerSocket, $location) {
   ctrl.table = [];
 
   ctrl.login  = function (username, password) {
+    poker.setCurrentPlayer(ctrl.username);
     ctrl.loginInfo = {'username': ctrl.username, 'password': ctrl.password}
     poker.login(ctrl.loginInfo).then(function(response){
       console.log('Login successful!', response.config.data.username);
