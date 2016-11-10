@@ -76,6 +76,7 @@ var Deck = require('./modules/deck');
 // Global Setup Variables
 var table = new Table('Fish Fry', 5, 10);
 
+
 // var connections = [];
 // var playersOnline = [];
 
@@ -115,15 +116,31 @@ io.on('connection', function(socket){
   socket.on('ready', function(){
     table.readyCount++;
     console.log(table.readyCount);
-    if(table.readyCount == 2){
+    if(table.readyCount == 3){
       table.deck.makeDeck(1);
       table.deck.shuffle(3);
       for(var i = 0; i < table.playerCount; i++) {
         table.players[i].hand.push(table.deck.deal());
       }
-    for(var i = 0; i < table.playerCount; i++) {
-      table.players[i].hand.push(table.deck.deal());
+      for(var i = 0; i < table.playerCount; i++) {
+        table.players[i].hand.push(table.deck.deal());
     }
+
+    if (table.dealerButton < table.players.length && table.dealerButton == 0) {
+      table.players[table.dealerButton].dealer = true;
+      table.potSize += table.smallBlind + table.bigBlind;
+      table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+      table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+      table.dealerButton++;
+
+    } else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
+      table.players[table.dealerButton].dealer = true;
+      table.dealterButton++;
+    } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
+      table.players[table.dealerButton].dealer = true;
+      table.dealterButton++;
+    }
+    console.log('Table on Ready: ', table);
     io.emit('ready', table);
   }
 

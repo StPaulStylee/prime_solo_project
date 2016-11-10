@@ -4,7 +4,6 @@ angular.module('pokerApp')
 function GameController(poker, pokerSocket) {
   console.log('GameController Loaded');
   var ctrl = this;
-  ctrl.clicked = true;
   ctrl.messages = [];
   //ctrl.players = poker.players;
   //ctrl.table = poker;
@@ -18,6 +17,7 @@ function GameController(poker, pokerSocket) {
   ctrl.potSize;
   ctrl.betSize;
   ctrl.username;
+  ctrl.readyClick = true;
 
 
   //console.log(ctrl.table);
@@ -38,7 +38,7 @@ function GameController(poker, pokerSocket) {
      //console.log(ctrl.messages);
   });
   ctrl.ready = function () {
-    ctrl.clicked = false;
+    ctrl.readyClick = false;
     // ctrl.readyCount++;
     // console.log(ctrl.readyCount);
     // if (ctrl.readyCount == 2) {

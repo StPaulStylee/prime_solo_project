@@ -21,7 +21,19 @@
     </li>
   </ul>
 
-<button ng-click='game.ready()'ng-show='clicked'>Ready!</button>
+<button ng-click='game.ready()' ng-show='game.readyClick'>Ready!</button>
+</section>
+<section class='community-cards'>
+  <li>
+    {{game.flop}}
+  </li>
+  <li>
+    {{game.turn}}
+  </li>
+  <li>
+    {{game.river}}
+  </li>
+
 </section>
 <section class='player-hud'>
   <div class='player-chat'>
@@ -51,15 +63,16 @@
     <p>Your Stack: {{ game.chipStack }}</p>
     <form ng-submit='game.sendBet()'>
       <div id='bet-input'>
-        <input type='number' ng-model='game.bet'  />
+        <input type='number' min='0' step='any' ng-model='game.bet'  />
         <button type='submit'>Bet!</button>
       </div>
+    </form>
       <div id='bet-click-boxes'>
-        <button type='click' value='game.potSize / 4'>1/4 Pot</button>
-        <button type='click' value='game.potSize / 2'>1/2 Pot</button>
-        <button type='click' value='game.potSize * 0.75'>3/4 Pot</button>
-        <button type='click' value='game.potSize'>Pot</button>
-        <button type='click' value='game.betSize' >Call</button>
+        <button type='click' ng-click='game.bet = game.potSize / 4'>1/4 Pot</button>
+        <button type='click' ng-click='game.bet = game.potSize / 2'>1/2 Pot</button>
+        <button type='click' ng-click='game.bet = game.potSize * 0.75'>3/4 Pot</button>
+        <button type='click' ng-click='game.bet = game.potSize'>Pot</button>
+        <button type='click' ng-click='game.bet = game.betSize'>Call</button>
       </div>
       <div id='check-fold-allIn'>
         <button type='click'>Check</button>
@@ -67,7 +80,6 @@
         <button type='click'>Min</button>
         <button type='click'>All-In</button>
       </div>
-    </form>
   </div>
 </section>
 </body>

@@ -7,11 +7,15 @@ function Table (tableName, smallBlind, bigBlind) {
   this.readyCount = 0;
   this.players = [];
   this.deck = new Deck();
+  this.flop = [];
+  this.turn = [];
+  this.river = [];
   this.discard = [];
   this.smallBlind = smallBlind;
   this.bigBlind = bigBlind;
   this.potSize = 0;
   this.betSize = 0;
+  this.dealerButton = 0;
   // this.seats = {};
   // this.hands = {};
   //this.dealer = ???
