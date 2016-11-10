@@ -1,30 +1,73 @@
+<body>
+
 <h1>Game View</h1>
 <nav>
   <a href='/lobby'>Back to Lobby</a>
 </nav>
-<form ng-submit='game.sendChat()'>
-  <input type='text' ng-model='game.chat' />
-  <button type='submit'>Send</button>
-</form>
-<ul ng-repeat=' player in game.table.players'>
-  <li>
-    Seat {{ player.seat }}: {{ player.username }}
-  </li>
-</ul>
-<ul class='chat' ng-repeat='message in game.messages'>
-  <li>
-    {{message}}
-  </li>
-</ul>
-<button ng-click='game.ready()'>Ready!</button>
+<section class='table-view'>
+  <div class='blinds'>
+    <p>Small Blind: {{ game.smallBlind }}  Big Blind: {{ game.bigBlind }}</p>
+  </div>
+  <div class='pot-size'>
+    <p>{{ game.potSize }}</p>
+  </div>
+  <div class='bet-size'>
+    <p>The bet to call is {{ game.betSize }}</p>
+  </div>
+
+  <ul ng-repeat=' player in game.table.players'>
+    <li>
+      <p>Seat {{ player.seat }}: {{ player.username }}</p>
+    </li>
+  </ul>
+
+<button ng-click='game.ready()'ng-show='clicked'>Ready!</button>
+</section>
 <section class='player-hud'>
   <div class='player-chat'>
-
+    <ul class='chat' ng-repeat='message in game.messages'>
+      <li>
+        {{ message.username }}: {{ message.msg }}
+      </li>
+    </ul>
+      <form ng-submit='game.sendChat()'>
+        <input type='text' ng-model='game.chat' />
+        <button type='submit'>Send</button>
+      </form>
   </div>
   <div class='player-cards'>
-    {{game.card1}} {{game.card2}}
-  </div>
-  <div class='player-action'>
+    <ul>
+      <li>
+        {{game.card1}}
+      </li>
+      <li>
+        {{game.card2}}
+      </li>
+    </ul>
 
   </div>
+  <div class='player-action'>
+    <p>{{ game.username }}</p>
+    <p>Your Stack: {{ game.chipStack }}</p>
+    <form ng-submit='game.sendBet()'>
+      <div id='bet-input'>
+        <input type='number' ng-model='game.bet'  />
+        <button type='submit'>Bet!</button>
+      </div>
+      <div id='bet-click-boxes'>
+        <button type='click' value='game.potSize / 4'>1/4 Pot</button>
+        <button type='click' value='game.potSize / 2'>1/2 Pot</button>
+        <button type='click' value='game.potSize * 0.75'>3/4 Pot</button>
+        <button type='click' value='game.potSize'>Pot</button>
+        <button type='click' value='game.betSize' >Call</button>
+      </div>
+      <div id='check-fold-allIn'>
+        <button type='click'>Check</button>
+        <button type='click'>Fold</button>
+        <button type='click'>Min</button>
+        <button type='click'>All-In</button>
+      </div>
+    </form>
+  </div>
 </section>
+</body>

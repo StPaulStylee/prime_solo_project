@@ -74,7 +74,7 @@ var Table = require('./modules/table');
 var Deck = require('./modules/deck');
 
 // Global Setup Variables
-var table = new Table('Fish Fry');
+var table = new Table('Fish Fry', 5, 10);
 
 // var connections = [];
 // var playersOnline = [];
@@ -101,7 +101,11 @@ io.on('connection', function(socket){
   });
 
   socket.on('chatMessage', function(msg){
-    io.emit('chatMessage', msg);
+    var player =findPlayer(socket, table);
+    var message = { user: player.username, msg: msg.msg}
+    io.emit('chatMessage', {username: player.username, msg: msg.msg})
+
+    //io.emit('chatMessage', {player.username: msg});
   });
 
   socket.on('table', function(){
@@ -122,7 +126,26 @@ io.on('connection', function(socket){
     }
     io.emit('ready', table);
   }
+
+
+
     //console.log(table.deck.cards);
+  });
+
+  socket.on('preFlopBet', function(bet){
+    console.log('From preFlopBet event', bet);
+//    io.emit('preFlopBet', data);
+
+    var player = findPlayer(socket, table);
+    table.potSize += bet.bet;
+    table.betSize = bet.bet;
+    player.chipStack -= bet.bet;
+
+    console.log('player', player);
+    console.log('table', table);
+    // table.postSize += data.betSize
+    // table.players + ['data'].username = data
+    io.emit('preFlopBet', table);
   });
 
   // socket.on('start', function(){
@@ -145,3 +168,9 @@ io.on('connection', function(socket){
     console.log('A user has disconnected.');
   });
 });
+
+function findPlayer(socket, table) {
+  return table.players.filter(function(player){
+    return player.id === socket.id;
+  })[0];
+}

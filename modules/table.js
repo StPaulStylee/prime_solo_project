@@ -1,12 +1,17 @@
 var Deck = require('./deck');
 
-function Table (tableName) {
+function Table (tableName, smallBlind, bigBlind) {
   this.id = 1;
   this.tableName = tableName;
   this.playerCount = 0;
   this.readyCount = 0;
   this.players = [];
   this.deck = new Deck();
+  this.discard = [];
+  this.smallBlind = smallBlind;
+  this.bigBlind = bigBlind;
+  this.potSize = 0;
+  this.betSize = 0;
   // this.seats = {};
   // this.hands = {};
   //this.dealer = ???
