@@ -5,6 +5,7 @@ function Table (tableName, smallBlind, bigBlind) {
   this.tableName = tableName;
   this.playerCount = 0;
   this.readyCount = 0;
+  this.handsPlayed = 0;
   this.players = [];
   this.deck = new Deck();
   this.flop = [];
@@ -16,6 +17,7 @@ function Table (tableName, smallBlind, bigBlind) {
   this.potSize = 0;
   this.betSize = 0;
   this.dealerButton = 0;
+
   // this.seats = {};
   // this.hands = {};
   //this.dealer = ???

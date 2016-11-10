@@ -142,11 +142,7 @@ io.on('connection', function(socket){
     }
     console.log('Table on Ready: ', table);
     io.emit('ready', table);
-  }
-
-
-
-    //console.log(table.deck.cards);
+    }
   });
 
   socket.on('preFlopBet', function(bet){
@@ -164,6 +160,100 @@ io.on('connection', function(socket){
     // table.players + ['data'].username = data
     io.emit('preFlopBet', table);
   });
+
+// Event that begins the next hand
+  socket.on('nextHand', function(){
+    table.handsPlayed++;
+    table.potSize = 0;
+    table.betSize = 0;
+    table.flop = [];
+    table.turn = [];
+    table.river = [];
+    table.discard = [];
+
+    for(var i = 0; i < table.players.length; i++) {
+      table.players[i].hand = [];
+    }
+
+    if (table.dealerButton < table.players.length && table.dealerButton == 0) {
+      table.players[table.players.length - 1].dealer = false;
+      table.players[table.dealerButton].dealer = true;
+      table.potSize += table.smallBlind + table.bigBlind;
+      table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+      table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+      table.dealerButton++;
+
+    } else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
+      table.players[table.dealerButton - 1].dealer = false;
+      table.players[table.dealerButton].dealer = true;
+      table.potSize += table.smallBlind + table.bigBlind;
+      table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+      table.players[0].chipStack -= table.bigBlind;
+      table.dealerButton++;
+
+    } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
+      table.players[table.dealerButton - 1].dealer = false;
+      table.players[table.dealerButton].dealer = true;
+      table.potSize += table.smallBlind + table.bigBlind;
+      table.players[0].chipStack -= table.smallBlind;
+      table.players[1].chipStack -= table.bigBlind;
+      table.dealerButton++;
+    } else if (table.dealerButton == table.players.length) {
+      table.players[table.players.length - 1].dealer = false;
+      table.players[0].dealer = true;
+      table.potSize += table.smallBlind + table.bigBlind;
+      table.players[1].chipStack -= table.smallBlind;
+      table.players[2].chipStack -= table.bigBlind;
+      table.dealerButton = 1;
+    }
+    // After the deal button is moved, shuffle the deck and deal the cards
+      table.deck.makeDeck(1);
+      table.deck.shuffle(3);
+      for(var i = 0; i < table.playerCount; i++) {
+        table.players[i].hand.push(table.deck.deal());
+      }
+      for(var i = 0; i < table.playerCount; i++) {
+        table.players[i].hand.push(table.deck.deal());
+      }
+    // Then send the updated table object back to the client
+      io.emit('nextHand', table);
+      console.log('Table for next hand', table);
+      console.log('Deck length on newHand:', table.deck.cards.length);
+    });
+
+  socket.on('flopRequest', function(){
+    console.log('Recieved flopRequest');
+    table.discard.push(table.deck.deal());
+    table.flop.push(table.deck.deal());
+    table.flop.push(table.deck.deal());
+    table.flop.push(table.deck.deal());
+    console.log('Flop Dealt:', table.flop);
+    console.log('Burn Cards:', table.discard);
+    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
+    io.emit('flopRequest', table);
+  });
+
+  socket.on('turnRequest', function(){
+    console.log('Received turnRequest');
+    table.discard.push(table.deck.deal());
+    table.turn.push(table.deck.deal());
+    console.log('Turn Dealt: ', table.turn);
+    console.log('Burn Cards: ', table.discard);
+    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
+    io.emit('turnRequest', table)
+  });
+
+  socket.on('riverRequest', function(){
+    console.log('Received riverRequest');
+    table.discard.push(table.deck.deal());
+    table.river.push(table.deck.deal());
+    console.log('river Dealt: ', table.river);
+    console.log('Burn Cards: ', table.discard);
+    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
+    io.emit('riverRequest', table)
+  });
+
+
 
   // socket.on('start', function(){
   //   console.log('Recieved Start!')
@@ -184,7 +274,7 @@ io.on('connection', function(socket){
     //console.log(playerOnline.username + ' has disconnected.');
     console.log('A user has disconnected.');
   });
-});
+}); // End of socket.io
 
 function findPlayer(socket, table) {
   return table.players.filter(function(player){

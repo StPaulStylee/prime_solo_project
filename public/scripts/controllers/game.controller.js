@@ -39,10 +39,7 @@ function GameController(poker, pokerSocket) {
   });
   ctrl.ready = function () {
     ctrl.readyClick = false;
-    // ctrl.readyCount++;
-    // console.log(ctrl.readyCount);
-    // if (ctrl.readyCount == 2) {
-    //   console.log('Sending ready');
+
       pokerSocket.emit('ready');
   };
   pokerSocket.on('ready', function(table){
@@ -58,6 +55,7 @@ function GameController(poker, pokerSocket) {
         ctrl.card1 = ctrl.table.players[i].hand[0];
         ctrl.card2 = ctrl.table.players[i].hand[1];
         ctrl.chipStack = ctrl.table.players[i].chipStack;
+        console.log(ctrl.card1);
       }
     }
     //console.log(ctrl.table);
@@ -73,6 +71,7 @@ function GameController(poker, pokerSocket) {
     pokerSocket.emit('preFlopBet', {bet: ctrl.bet});
     ctrl.bet = '';
   };
+
   pokerSocket.on('preFlopBet', function(table){
     ctrl.table = table;
     ctrl.potSize = table.potSize;
@@ -83,10 +82,64 @@ function GameController(poker, pokerSocket) {
         ctrl.chipStack = ctrl.table.players[i].chipStack;
       }
     }
-
   });
 
-  // pokerSocket.on('preFlopBet', function (table){
-  //   console.log('Table and reception of preFlopBet from server: ', table);
-  // });
-}
+    ctrl.nextHand = function() {
+      pokerSocket.emit('nextHand');
+    };
+
+    pokerSocket.on('nextHand', function(table){
+      console.log('New Table Object for nextHand: ', table);
+      ctrl.table = table;
+      ctrl.smallBlind = table.smallBlind;
+      ctrl.bigBlind = table.bigBlind;
+      ctrl.potSize = table.potSize;
+      ctrl.betSize = table.betSize;
+      ctrl.flop = table.flop;
+      ctrl.turn = table.turn;
+      ctrl.river = table.river;
+
+      var currentPlayer = poker.getCurrentPlayer();
+      for(var i = 0; i < ctrl.table.players.length; i++) {
+        if (currentPlayer === ctrl.table.players[i].username) {
+          ctrl.username = ctrl.table.players[i].username;
+          ctrl.card1 = ctrl.table.players[i].hand[0];
+          ctrl.card2 = ctrl.table.players[i].hand[1];
+          ctrl.chipStack = ctrl.table.players[i].chipStack;
+          console.log(ctrl.card1);
+        }
+      }
+    });
+
+// Send flopRequest event
+  ctrl.getFlop = function() {
+    pokerSocket.emit('flopRequest');
+  };
+// Receives flopRequest and updates flop array
+  pokerSocket.on('flopRequest', function(table){
+    ctrl.table = table;
+    ctrl.flop = table.flop;
+  });
+// Send turnRequest event
+  ctrl.getTurn = function() {
+    pokerSocket.emit('turnRequest');
+  };
+// Receives turnRequestand updates turn array
+  pokerSocket.on('turnRequest', function(table){
+    ctrl.table = table;
+    ctrl.turn = table.turn;
+  });
+// Send riverRequest event
+  ctrl.getRiver = function() {
+    pokerSocket.emit('riverRequest');
+  };
+// Receives riverRequest and updates river array
+  pokerSocket.on('riverRequest', function(table){
+    ctrl.table = table;
+    ctrl.river = table.river;
+  });
+
+
+
+
+} // End of GameController

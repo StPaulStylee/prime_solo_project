@@ -55,14 +55,15 @@ table {
 /*---------------------------------------------------------------------------
 Game View
 ----------------------------------------------------------------------------*/
-li {
-  list-style-type: none;
+.community-cards ul li {
+	display: inline;
 }
 
-ul {
-  padding: 0;
+.table-info ul li {
+	border-right: 1px solid black;
+	display: inline;
+	margin-right: 10px;
 }
-
 
 .player-hud {
   border-top: 1px solid black;

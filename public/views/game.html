@@ -5,8 +5,19 @@
   <a href='/lobby'>Back to Lobby</a>
 </nav>
 <section class='table-view'>
-  <div class='blinds'>
-    <p>Small Blind: {{ game.smallBlind }}  Big Blind: {{ game.bigBlind }}</p>
+  <div class='table-info'>
+    <ul>
+      <li>
+        Small Blind: {{ game.smallBlind }}
+      </li>
+      <li>
+        Big Blind: {{ game.bigBlind }}
+      </li>
+      <li>
+        Dealer: Seat {{ game.table.dealerButton }}
+      </li>
+    </ul>
+
   </div>
   <div class='pot-size'>
     <p>{{ game.potSize }}</p>
@@ -24,17 +35,28 @@
 <button ng-click='game.ready()' ng-show='game.readyClick'>Ready!</button>
 </section>
 <section class='community-cards'>
-  <li>
-    {{game.flop}}
-  </li>
-  <li>
-    {{game.turn}}
-  </li>
-  <li>
-    {{game.river}}
-  </li>
+
+  <ul>
+    <li>
+      {{game.flop[0].rank}}{{game.flop[0].suit}}  {{game.flop[1].rank}}{{game.flop[1].suit}}  {{game.flop[2].rank}}{{game.flop[2].suit}}
+    </li>
+    <li>
+        {{game.turn[0].rank}}{{game.turn[0].suit}}
+    </li>
+    <li>
+        {{game.river[0].rank}}{{game.river[0].suit}}
+    </li>
+  </ul>
 
 </section>
+<div class='temporary-test-buttons'>
+
+  <button ng-click='game.getFlop()'>Flop</button>
+  <button ng-click='game.getTurn()'>Turn</button>
+  <button ng-click='game.getRiver()'>River</button>
+  <button ng-click='game.nextHand()'>Next Hand</button>
+
+</div>
 <section class='player-hud'>
   <div class='player-chat'>
     <ul class='chat' ng-repeat='message in game.messages'>
@@ -50,10 +72,7 @@
   <div class='player-cards'>
     <ul>
       <li>
-        {{game.card1}}
-      </li>
-      <li>
-        {{game.card2}}
+        {{game.card1.rank}}{{game.card1.suit}}  {{game.card2.rank}}{{game.card2.suit}}
       </li>
     </ul>
 
@@ -68,11 +87,11 @@
       </div>
     </form>
       <div id='bet-click-boxes'>
-        <button type='click' ng-click='game.bet = game.potSize / 4'>1/4 Pot</button>
-        <button type='click' ng-click='game.bet = game.potSize / 2'>1/2 Pot</button>
-        <button type='click' ng-click='game.bet = game.potSize * 0.75'>3/4 Pot</button>
-        <button type='click' ng-click='game.bet = game.potSize'>Pot</button>
-        <button type='click' ng-click='game.bet = game.betSize'>Call</button>
+        <button ng-click='game.bet = game.potSize / 4'>1/4 Pot</button>
+        <button ng-click='game.bet = game.potSize / 2'>1/2 Pot</button>
+        <button ng-click='game.bet = game.potSize * 0.75'>3/4 Pot</button>
+        <button ng-click='game.bet = game.potSize'>Pot</button>
+        <button ng-click='game.bet = game.betSize'>Call</button>
       </div>
       <div id='check-fold-allIn'>
         <button type='click'>Check</button>
