@@ -116,8 +116,9 @@ Start of Game
       if (currentPlayer === ctrl.table.players[i].username) {
         // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
         if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
-          return
+          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
+                 'amount greater than or equal to ' + (ctrl.table.bigBlind * 2) + ', or fold.');
+          return;
         }
         // if you checks and has already paid the blind and noone has raised, the check is allowed
       } else if (currentPlayer === ctrl.table.players[i].username) {
@@ -153,7 +154,8 @@ Start of Game
       if (currentPlayer === ctrl.table.players[i].username) {
         // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
         if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
+          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
+                 'amount greater than or equal to ' + (ctrl.table.bigBlind * 2) + ' or fold.');
           return
         }
         // if you checks and has already paid the blind and noone has raised, the check is allowed
@@ -191,6 +193,7 @@ Start of Game
           ctrl.card1 = ctrl.table.players[i].hand[0];
           ctrl.card2 = ctrl.table.players[i].hand[1];
           ctrl.chipStack = ctrl.table.players[i].chipStack;
+          ctrl.turnToAct = ctrl.table.players[i].turnToAct;
         }
       }
     });

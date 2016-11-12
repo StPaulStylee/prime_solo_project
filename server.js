@@ -270,17 +270,19 @@ var setDealerStart = function() {
     table.players[table.dealerButton].dealer = true;
     table.potSize += table.smallBlind + table.bigBlind;
     table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+    table.players[table.dealerButton + 1].smallBlind = true;
     table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+    table.players[table.dealerButton + 2].bigBlind = true;
     table.dealerButton++;
-
-  } else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
-    table.players[table.dealerButton].dealer = true;
-    table.dealterButton++;
-
-  } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
-    table.players[table.dealerButton].dealer = true;
-    table.dealterButton++;
-  }
+  //
+} //else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
+  //   table.players[table.dealerButton].dealer = true;
+  //   table.dealterButton++;
+  //
+  // } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
+  //   table.players[table.dealerButton].dealer = true;
+  //   table.dealterButton++;
+  // }
 };
 
 var setTurnToActStart = function() {
@@ -289,13 +291,10 @@ var setTurnToActStart = function() {
 };
 
 var setTurnToAct = function() {
-  if (table.seatToAct < table.players.length && table.dealerButton == 0) {
-    table.players[table.players.length - 1].dealer = false;
-    table.players[table.dealerButton].dealer = true;
-    table.potSize += table.smallBlind + table.bigBlind;
-    table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
-    table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
-    table.dealerButton++;
+  if (table.seatToAct < table.players.length && table.seatToAct == 0) {
+    table.players[table.players.length - 1].turnToAct = false;
+    table.players[table.seatToAct].turnToAct = true;
+    table.seatToAct++;
 
   } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
     table.players[table.seatToAct - 1].turnToAct = false;
@@ -315,36 +314,69 @@ var setTurnToAct = function() {
 };
 
 var setDealer = function() {
+  for(var i = 0; i < table.players.length; i++) {
+    table.players[i].turnToAct = false;
+  }
     if (table.dealerButton < table.players.length && table.dealerButton == 0) {
+      table.players[table.dealerButton].turnToAct = true;
+      table.players[2].turnToAct = false;
       table.players[table.players.length - 1].dealer = false;
       table.players[table.dealerButton].dealer = true;
       table.potSize += table.smallBlind + table.bigBlind;
       table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+      table.players[table.dealerButton + 1].smallBlind = true;
       table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+      table.players[table.dealerButton + 2].bigBlind = true;
       table.dealerButton++;
+      table.seatToAct = table.dealerButton;
 
     } else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
+      table.seatToAct = table.dealerButton;
+      table.players[table.dealerButton].turnToAct = true;
+      table.players[table.dealerButton - 1].turnToAct = false;
       table.players[table.dealerButton - 1].dealer = false;
       table.players[table.dealerButton].dealer = true;
       table.potSize += table.smallBlind + table.bigBlind;
       table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+      table.players[table.dealerButton + 1].smallBlind = true;
+      table.players[table.dealerButton].smallBlind = false;
       table.players[0].chipStack -= table.bigBlind;
+      table.players[0].bigBlind = true;
+      table.players[2].bigBlind = false;
       table.dealerButton++;
+      table.seatToAct = table.dealerButton;
 
     } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
+      table.seatToAct = table.dealerButton;
+      table.players[table.dealerButton].turnToAct = true;
+      table.players[table.dealerButton - 1].turnToAct = false;
       table.players[table.dealerButton - 1].dealer = false;
       table.players[table.dealerButton].dealer = true;
       table.potSize += table.smallBlind + table.bigBlind;
       table.players[0].chipStack -= table.smallBlind;
+      table.players[0].smallBlind = true;
+      table.players[table.dealerButton].smallBlind = false;
       table.players[1].chipStack -= table.bigBlind;
+      table.players[1].bigBlind = true;
+      table.players[0].bigBlind = false;
       table.dealerButton++;
+      table.seatToAct = table.dealerButton;
+
     } else if (table.dealerButton == table.players.length) {
       table.players[table.players.length - 1].dealer = false;
       table.players[0].dealer = true;
       table.potSize += table.smallBlind + table.bigBlind;
       table.players[1].chipStack -= table.smallBlind;
+      table.players[1].smallBlind = true;
+      table.players[0].smallBlind = false;
       table.players[2].chipStack -= table.bigBlind;
+      table.players[2].bigBlind = true;
+      table.players[1].bigBlind = false;
       table.dealerButton = 1;
+      table.seatToAct = table.dealerButton;
+      table.players[0].turnToAct = true;
+      table.players[2].turnToAct = false;
+
     }
   };
 
