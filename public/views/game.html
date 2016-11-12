@@ -16,6 +16,7 @@
       <li>
         Dealer: Seat {{ game.table.dealerButton }}
       </li>
+    </li> Seat to Act: {{ game.table.seatToAct }}
     </ul>
 
   </div>
@@ -32,7 +33,7 @@
     </li>
   </ul>
 
-<button ng-click='game.ready()' ng-show='game.readyClick'>Ready!</button>
+<button ng-click='game.ready()' ng-hide='game.readyClick'>Ready!</button>
 </section>
 <section class='community-cards'>
 
@@ -80,6 +81,7 @@
   <div class='player-action'>
     <p>{{ game.username }}</p>
     <p>Your Stack: {{ game.chipStack }}</p>
+    <div class='hide-container' ng-show='game.turnToAct'>
     <form ng-submit='game.sendBet()'>
       <div id='bet-input'>
         <input type='number' min='0' step='any' ng-model='game.bet'  />
@@ -94,11 +96,12 @@
         <button ng-click='game.bet = game.betSize'>Call</button>
       </div>
       <div id='check-fold-allIn'>
-        <button type='click'>Check</button>
-        <button type='click'>Fold</button>
+        <button ng-click='game.check()'>Check</button>
+        <button ng-click='game.fold()'>Fold</button>
         <button type='click'>Min</button>
         <button type='click'>All-In</button>
       </div>
+    </div>
   </div>
 </section>
 </body>

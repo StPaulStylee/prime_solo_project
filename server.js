@@ -72,17 +72,14 @@ var io = require('socket.io')(server);
 var Player = require('./modules/player');
 var Table = require('./modules/table');
 var Deck = require('./modules/deck');
+//var Gameplay = require('./modules/gameplay')
 
 // Global Setup Variables
 var table = new Table('Fish Fry', 5, 10);
 
-
-// var connections = [];
 // var playersOnline = [];
 
 io.on('connection', function(socket){
-  //connections.push(socket);
-  //console.log('Connected: %s connected', connections.length);
 
   socket.on('playerLoggedIn', function(data){
     console.log('Data from login:', data);
@@ -92,17 +89,10 @@ io.on('connection', function(socket){
     table.players.push(player);
     table.seatAssign();
     console.log('Table from Login: ', table);
-    // table.handAssign();
-    // table.deck.makeDeck(1)
-    // console.log('Player created:', player);
-    // console.log(player.username + ' just signed in and has been assigned to socket ID:' + socket.id);
-    // console.log('Players at the table:', table.players);
-    //console.log(table);
-    //console.log('Players Online: ', playersOnline);
   });
 
   socket.on('chatMessage', function(msg){
-    var player =findPlayer(socket, table);
+    var player = findPlayer(socket, table);
     var message = { user: player.username, msg: msg.msg}
     io.emit('chatMessage', {username: player.username, msg: msg.msg})
 
@@ -113,68 +103,218 @@ io.on('connection', function(socket){
     io.emit('table', table);
   });
 
+  /*----------------------------------------------------------------------------
+  Start of Game
+  ---------------------------------------------------------------------------*/
+
   socket.on('ready', function(){
     table.readyCount++;
     console.log(table.readyCount);
     if(table.readyCount == 3){
-      table.deck.makeDeck(1);
-      table.deck.shuffle(3);
-      for(var i = 0; i < table.playerCount; i++) {
-        table.players[i].hand.push(table.deck.deal());
-      }
-      for(var i = 0; i < table.playerCount; i++) {
-        table.players[i].hand.push(table.deck.deal());
+      ready();
+      setDealerStart();
+      setTurnToActStart();
     }
-
-    if (table.dealerButton < table.players.length && table.dealerButton == 0) {
-      table.players[table.dealerButton].dealer = true;
-      table.potSize += table.smallBlind + table.bigBlind;
-      table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
-      table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
-      table.dealerButton++;
-
-    } else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
-      table.players[table.dealerButton].dealer = true;
-      table.dealterButton++;
-    } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
-      table.players[table.dealerButton].dealer = true;
-      table.dealterButton++;
-    }
+    console.log('Dealer button', table.dealerButton);
     console.log('Table on Ready: ', table);
     io.emit('ready', table);
-    }
   });
 
+  /*----------------------------------------------------------------------------
+  Preflop
+  ---------------------------------------------------------------------------*/
   socket.on('preFlopBet', function(bet){
     console.log('From preFlopBet event', bet);
-//    io.emit('preFlopBet', data);
-
     var player = findPlayer(socket, table);
+    console.log('findPlayer() from preFlopBet event: ', player)
     table.potSize += bet.bet;
     table.betSize = bet.bet;
     player.chipStack -= bet.bet;
 
-    console.log('player', player);
-    console.log('table', table);
-    // table.postSize += data.betSize
-    // table.players + ['data'].username = data
+    setTurnToAct();
     io.emit('preFlopBet', table);
   });
 
-// Event that begins the next hand
-  socket.on('nextHand', function(){
-    table.handsPlayed++;
-    table.potSize = 0;
+  socket.on('preFlopCheck', function(check){
+    var player = findPlayer(socket, table);
+    // if (player.moneyOnStreet < table.bigBlind) {
+    //   io.emit('preFlopCheckError');
+    // }
+    player.handCheck = true;
+    // for (var i = 0; i < table.players.length; i++) {
+    //   if (table.players[i].handActive == true) {
+    //     if (table.players[i].handCheck == true) {
+    //
+    //     }
+    //     else if (table.players[i].handBet == true) {
+    //
+    //     }
+    //   }
+    // }
+    console.log('findPlayer() from preFlopCheck event', player);
+    setTurnToAct();
+    io.emit('preFlopCheck', table);
+  });
+
+  /*----------------------------------------------------------------------------
+  Flop
+  ---------------------------------------------------------------------------*/
+
+  socket.on('flopRequest', function(){
     table.betSize = 0;
-    table.flop = [];
-    table.turn = [];
-    table.river = [];
-    table.discard = [];
+    console.log('Recieved flopRequest');
+    dealFlop();
+    console.log('Flop Dealt:', table.flop);
+    console.log('Burn Cards:', table.discard);
+    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
+    io.emit('flopRequest', table);
 
-    for(var i = 0; i < table.players.length; i++) {
-      table.players[i].hand = [];
+  });
+
+
+    /*----------------------------------------------------------------------------
+    Turn
+    ---------------------------------------------------------------------------*/
+
+  socket.on('turnRequest', function(){
+
+    console.log('Received turnRequest');
+    dealTurn();
+    console.log('Turn Dealt: ', table.turn);
+    console.log('Burn Cards: ', table.discard);
+    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
+    io.emit('turnRequest', table)
+
+  });
+
+  /*----------------------------------------------------------------------------
+  River
+  ---------------------------------------------------------------------------*/
+
+  socket.on('riverRequest', function(){
+
+    console.log('Received riverRequest');
+    dealRiver();
+    console.log('river Dealt: ', table.river);
+    console.log('Burn Cards: ', table.discard);
+    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
+    io.emit('riverRequest', table)
+
+  });
+
+  /*----------------------------------------------------------------------------
+  Showdown
+  ---------------------------------------------------------------------------*/
+
+  /*----------------------------------------------------------------------------
+  Next Hand Request
+  ---------------------------------------------------------------------------*/
+
+  // Event that begins the next hand
+    socket.on('nextHand', function(){
+      table.handsPlayed++;
+      table.potSize = 0;
+      table.betSize = 0;
+      table.flop = [];
+      table.turn = [];
+      table.river = [];
+      table.discard = [];
+
+      clearHands();
+      setDealer();
+      // After the deal button is moved, shuffle the deck and deal the cards
+      dealHands();
+      // Then send the updated table object back to the client
+        io.emit('nextHand', table);
+        console.log('Table for next hand', table);
+        console.log('Deck length on newHand:', table.deck.cards.length);
+      });
+
+  // disconnect
+  socket.on('disconnect', function (){
+    console.log('A user has disconnected.');
+  });
+}); // End of socket.io
+
+
+
+
+
+
+
+
+
+
+
+
+
+function findPlayer(socket, table) {
+  return table.players.filter(function(player){
+    return player.id === socket.id;
+  })[0];
+}
+
+var ready = function() {
+    table.deck.makeDeck(1);
+    table.deck.shuffle(3);
+    for(var i = 0; i < table.playerCount; i++) {
+      table.players[i].hand.push(table.deck.deal());
     }
+    for(var i = 0; i < table.playerCount; i++) {
+      table.players[i].hand.push(table.deck.deal());
+    }
+};
 
+var setDealerStart = function() {
+  if (table.dealerButton < table.players.length && table.dealerButton == 0) {
+    table.players[table.dealerButton].dealer = true;
+    table.potSize += table.smallBlind + table.bigBlind;
+    table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+    table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+    table.dealerButton++;
+
+  } else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
+    table.players[table.dealerButton].dealer = true;
+    table.dealterButton++;
+
+  } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
+    table.players[table.dealerButton].dealer = true;
+    table.dealterButton++;
+  }
+};
+
+var setTurnToActStart = function() {
+  table.players[table.seatToAct].turnToAct = true;
+  table.seatToAct++;
+};
+
+var setTurnToAct = function() {
+  if (table.seatToAct < table.players.length && table.dealerButton == 0) {
+    table.players[table.players.length - 1].dealer = false;
+    table.players[table.dealerButton].dealer = true;
+    table.potSize += table.smallBlind + table.bigBlind;
+    table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+    table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+    table.dealerButton++;
+
+  } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
+    table.players[table.seatToAct - 1].turnToAct = false;
+    table.players[table.seatToAct].turnToAct = true;
+    table.seatToAct++;
+
+  } else if (table.seatToAct < table.players.length && table.seatToAct == 2) {
+    table.players[table.seatToAct - 1].turnToAct = false;
+    table.players[table.seatToAct].turnToAct = true;
+    table.seatToAct++;
+
+  } else if (table.seatToAct == table.players.length) {
+    table.players[table.players.length - 1].turnToAct = false;
+    table.players[0].turnToAct = true;
+    table.seatToAct = 1;
+  }
+};
+
+var setDealer = function() {
     if (table.dealerButton < table.players.length && table.dealerButton == 0) {
       table.players[table.players.length - 1].dealer = false;
       table.players[table.dealerButton].dealer = true;
@@ -206,78 +346,38 @@ io.on('connection', function(socket){
       table.players[2].chipStack -= table.bigBlind;
       table.dealerButton = 1;
     }
-    // After the deal button is moved, shuffle the deck and deal the cards
-      table.deck.makeDeck(1);
-      table.deck.shuffle(3);
-      for(var i = 0; i < table.playerCount; i++) {
-        table.players[i].hand.push(table.deck.deal());
-      }
-      for(var i = 0; i < table.playerCount; i++) {
-        table.players[i].hand.push(table.deck.deal());
-      }
-    // Then send the updated table object back to the client
-      io.emit('nextHand', table);
-      console.log('Table for next hand', table);
-      console.log('Deck length on newHand:', table.deck.cards.length);
-    });
+  };
 
-  socket.on('flopRequest', function(){
-    console.log('Recieved flopRequest');
+  var dealHands = function() {
+    table.deck.makeDeck(1);
+    table.deck.shuffle(3);
+    for(var i = 0; i < table.playerCount; i++) {
+      table.players[i].hand.push(table.deck.deal());
+    }
+    for(var i = 0; i < table.playerCount; i++) {
+      table.players[i].hand.push(table.deck.deal());
+    }
+  };
+
+  var clearHands = function() {
+    for(var i = 0; i < table.players.length; i++) {
+      table.players[i].hand = [];
+    }
+  };
+
+  var dealFlop = function() {
     table.discard.push(table.deck.deal());
     table.flop.push(table.deck.deal());
     table.flop.push(table.deck.deal());
     table.flop.push(table.deck.deal());
-    console.log('Flop Dealt:', table.flop);
-    console.log('Burn Cards:', table.discard);
-    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
-    io.emit('flopRequest', table);
-  });
+  };
 
-  socket.on('turnRequest', function(){
-    console.log('Received turnRequest');
+  var dealTurn = function() {
     table.discard.push(table.deck.deal());
     table.turn.push(table.deck.deal());
-    console.log('Turn Dealt: ', table.turn);
-    console.log('Burn Cards: ', table.discard);
-    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
-    io.emit('turnRequest', table)
-  });
+  };
 
-  socket.on('riverRequest', function(){
-    console.log('Received riverRequest');
+  var dealRiver = function() {
     table.discard.push(table.deck.deal());
     table.river.push(table.deck.deal());
-    console.log('river Dealt: ', table.river);
-    console.log('Burn Cards: ', table.discard);
-    console.log('Cards Remaining in Deck: ', table.deck.cards.length);
-    io.emit('riverRequest', table)
-  });
-
-
-
-  // socket.on('start', function(){
-  //   console.log('Recieved Start!')
-  //   for(var i = 0; i < table.playerCount; i++) {
-  //     table.hands['Seat ' + (i + 1)].push(table.deck.deal());
-  //   }
-  //   for(var i = 0; i < table.playerCount; i++) {
-  //     table.hands['Seat ' + (i + 1)].push(table.deck.deal());
-  //   }
-  //   io.emit('table', table);
-  //   console.log(table);
-  // });
-
-
-  // disconnect
-  socket.on('disconnect', function (){
-    //connections.splice(connections.indexOf(socket), 1);
-    //console.log(playerOnline.username + ' has disconnected.');
-    console.log('A user has disconnected.');
-  });
-}); // End of socket.io
-
-function findPlayer(socket, table) {
-  return table.players.filter(function(player){
-    return player.id === socket.id;
-  })[0];
-}
+  };

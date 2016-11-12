@@ -17,8 +17,8 @@ function GameController(poker, pokerSocket) {
   ctrl.potSize;
   ctrl.betSize;
   ctrl.username;
-  ctrl.readyClick = true;
-
+  ctrl.readyClick = false;
+  ctrl.turnToAct = false;
 
   //console.log(ctrl.table);
   //console.log(ctrl.players);
@@ -36,9 +36,13 @@ function GameController(poker, pokerSocket) {
     ctrl.messages.push(msg);
 
      //console.log(ctrl.messages);
+/*----------------------------------------------------------------------------
+Start of Game
+---------------------------------------------------------------------------*/
+
   });
   ctrl.ready = function () {
-    ctrl.readyClick = false;
+    ctrl.readyClick = true;
 
       pokerSocket.emit('ready');
   };
@@ -47,6 +51,9 @@ function GameController(poker, pokerSocket) {
     ctrl.smallBlind = table.smallBlind;
     ctrl.bigBlind = table.bigBlind;
     ctrl.potSize = table.potSize;
+
+    // console.log(ctrl.turnToAct);
+    // console.log(table.players[0].turnToAct);
     var currentPlayer = poker.getCurrentPlayer();
     //console.log('From GameController: ', currentPlayer);
     for(var i = 0; i < ctrl.table.players.length; i++) {
@@ -55,11 +62,15 @@ function GameController(poker, pokerSocket) {
         ctrl.card1 = ctrl.table.players[i].hand[0];
         ctrl.card2 = ctrl.table.players[i].hand[1];
         ctrl.chipStack = ctrl.table.players[i].chipStack;
+        ctrl.turnToAct = ctrl.table.players[i].turnToAct;
         console.log(ctrl.card1);
       }
     }
-    //console.log(ctrl.table);
   });
+
+  /*----------------------------------------------------------------------------
+  Preflop
+  ---------------------------------------------------------------------------*/
 
   ctrl.sendBet = function() {
     // ctrl.potSize += ctrl.bet;
@@ -80,9 +91,83 @@ function GameController(poker, pokerSocket) {
     for(var i = 0; i < ctrl.table.players.length; i++) {
       if (currentPlayer === ctrl.table.players[i].username) {
         ctrl.chipStack = ctrl.table.players[i].chipStack;
+        ctrl.turnToAct = ctrl.table.players[i].turnToAct;
+      }
+    }
+    // for(var i = 0; i < ctrl.table.players.length; i++) {
+    //   if (currentPlayer === ctrl.table.players[i].username) {
+    //     // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
+    //     if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+    //       alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
+    //       return
+    //     }
+    //     // if you checks and has already paid the blind and noone has raised, the check is allowed
+    //   } else if (currentPlayer === ctrl.table.players[i].username) {
+    //       if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+    //         pokerSocket.emit('preFlopCheck');
+    //       }
+    //   }
+    // }
+  });
+
+  ctrl.check = function() {
+    var currentPlayer = poker.getCurrentPlayer();
+    for(var i = 0; i < ctrl.table.players.length; i++) {
+      if (currentPlayer === ctrl.table.players[i].username) {
+        // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
+        if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
+          return
+        }
+        // if you checks and has already paid the blind and noone has raised, the check is allowed
+      } else if (currentPlayer === ctrl.table.players[i].username) {
+          if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+            pokerSocket.emit('preFlopCheck');
+          }
+      }
+    }
+  };
+
+  // pokerSocket.on('preFlopCheckError', function(){
+  //   var currentPlayer = poker.getCurrentPlayer();
+  //   for(var i = 0; i < ctrl.table.players.length; i++) {
+  //     if (currentPlayer === ctrl.table.players[i].username) {
+  //       alert('If no player has raised, you must call the amount of the Big Blind.')
+  //     }
+  //   }
+  // });
+
+  pokerSocket.on('preFlopCheck', function(table){
+    console.log('From preFlopCheck: ', table);
+    ctrl.table = table;
+    ctrl.potSize = table.potSize;
+    ctrl.betSize = table.betSize;
+    var currentPlayer = poker.getCurrentPlayer();
+    for(var i = 0; i < ctrl.table.players.length; i++) {
+      if (currentPlayer === ctrl.table.players[i].username) {
+        ctrl.chipStack = ctrl.table.players[i].chipStack;
+        ctrl.turnToAct = ctrl.table.players[i].turnToAct;
+      }
+    }
+    for(var i = 0; i < ctrl.table.players.length; i++) {
+      if (currentPlayer === ctrl.table.players[i].username) {
+        // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
+        if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
+          return
+        }
+        // if you checks and has already paid the blind and noone has raised, the check is allowed
+      } else if (currentPlayer === ctrl.table.players[i].username) {
+          if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+            pokerSocket.emit('preFlopCheck');
+          }
       }
     }
   });
+
+  /*----------------------------------------------------------------------------
+  Flop
+  ---------------------------------------------------------------------------*/
 
     ctrl.nextHand = function() {
       pokerSocket.emit('nextHand');
@@ -106,7 +191,6 @@ function GameController(poker, pokerSocket) {
           ctrl.card1 = ctrl.table.players[i].hand[0];
           ctrl.card2 = ctrl.table.players[i].hand[1];
           ctrl.chipStack = ctrl.table.players[i].chipStack;
-          console.log(ctrl.card1);
         }
       }
     });
@@ -118,6 +202,7 @@ function GameController(poker, pokerSocket) {
 // Receives flopRequest and updates flop array
   pokerSocket.on('flopRequest', function(table){
     ctrl.table = table;
+    ctrl.betSize = table.betSize;
     ctrl.flop = table.flop;
   });
 // Send turnRequest event
