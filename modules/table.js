@@ -9,7 +9,8 @@ function Table (tableName, smallBlind, bigBlind) {
   this.smallBlind = smallBlind;
   this.bigBlind = bigBlind;
   this.potSize = 0;
-  this.betSize = 0;
+  this.betSize = bigBlind;
+  this.highestBet = bigBlind;
   this.dealerButton = 0;
   this.seatToAct = 0;
   this.players = [];

@@ -124,18 +124,24 @@ io.on('connection', function(socket){
   Preflop
   ---------------------------------------------------------------------------*/
   socket.on('preFlopBet', function(bet){
-    console.log('From preFlopBet event', bet);
+    console.log('From pre flop BET event', bet);
     var player = findPlayer(socket, table);
-    console.log('findPlayer() from preFlopBet event: ', player)
+    console.log('findPlayer() from pre flop BET event: ', player)
+    if (bet.bet > table.highestBet) {
+      table.highestBet = bet.bet
+    }
     table.potSize += bet.bet;
     table.betSize = bet.bet;
     player.chipStack -= bet.bet;
+    player.moneyOnStreet += bet.bet
+    player.handBet = true;
+    console.log(player);
 
     setTurnToAct();
     io.emit('preFlopBet', table);
   });
 
-  socket.on('preFlopCheck', function(check){
+  socket.on('preFlopCheck', function(){
     var player = findPlayer(socket, table);
     // if (player.moneyOnStreet < table.bigBlind) {
     //   io.emit('preFlopCheckError');
@@ -151,9 +157,15 @@ io.on('connection', function(socket){
     //     }
     //   }
     // }
-    console.log('findPlayer() from preFlopCheck event', player);
+    console.log('findPlayer() from pre flop CHECK event', player);
     setTurnToAct();
     io.emit('preFlopCheck', table);
+  });
+
+  socket.on('preFoldFold', function(){
+    var player = findPlayer(socket, table);
+    player.handActive = false;
+    setTurnToAct();
   });
 
   /*----------------------------------------------------------------------------
@@ -162,6 +174,7 @@ io.on('connection', function(socket){
 
   socket.on('flopRequest', function(){
     table.betSize = 0;
+    table.highestBet = 0
     console.log('Recieved flopRequest');
     dealFlop();
     console.log('Flop Dealt:', table.flop);
@@ -215,6 +228,7 @@ io.on('connection', function(socket){
       table.handsPlayed++;
       table.potSize = 0;
       table.betSize = 0;
+      table.highestBet = table.bigBlind;
       table.flop = [];
       table.turn = [];
       table.river = [];
@@ -270,8 +284,10 @@ var setDealerStart = function() {
     table.players[table.dealerButton].dealer = true;
     table.potSize += table.smallBlind + table.bigBlind;
     table.players[table.dealerButton + 1].chipStack -= table.smallBlind;
+    table.players[table.dealerButton + 1].moneyOnStreet = table.smallBlind;
     table.players[table.dealerButton + 1].smallBlind = true;
     table.players[table.dealerButton + 2].chipStack -= table.bigBlind;
+    table.players[table.dealerButton + 2].moneyOnStreet = table.bigBlind;
     table.players[table.dealerButton + 2].bigBlind = true;
     table.dealerButton++;
   //
@@ -291,6 +307,7 @@ var setTurnToActStart = function() {
 };
 
 var setTurnToAct = function() {
+  
   if (table.seatToAct < table.players.length && table.seatToAct == 0) {
     table.players[table.players.length - 1].turnToAct = false;
     table.players[table.seatToAct].turnToAct = true;

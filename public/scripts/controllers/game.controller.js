@@ -15,7 +15,7 @@ function GameController(poker, pokerSocket) {
   ctrl.smallBlind;
   ctrl.bigBlind;
   ctrl.potSize;
-  ctrl.betSize;
+  ctrl.highestBet;
   ctrl.username;
   ctrl.readyClick = false;
   ctrl.turnToAct = false;
@@ -51,6 +51,8 @@ Start of Game
     ctrl.smallBlind = table.smallBlind;
     ctrl.bigBlind = table.bigBlind;
     ctrl.potSize = table.potSize;
+    ctrl.highestBet = table.highestBet;
+
 
     // console.log(ctrl.turnToAct);
     // console.log(table.players[0].turnToAct);
@@ -63,7 +65,7 @@ Start of Game
         ctrl.card2 = ctrl.table.players[i].hand[1];
         ctrl.chipStack = ctrl.table.players[i].chipStack;
         ctrl.turnToAct = ctrl.table.players[i].turnToAct;
-        console.log(ctrl.card1);
+        console.log(ctrl.table.players[i].moneyOnStreet);
       }
     }
   });
@@ -78,15 +80,40 @@ Start of Game
     // ctrl.chipStack -= ctrl.bet;
     //console.log('From sendBet: ', ctrl.table.players[i]);
     //ctrl.table.players[i].chipStack -= ctrl.bet;
-    ctrl.table.betSize = ctrl.bet;
-    pokerSocket.emit('preFlopBet', {bet: ctrl.bet});
+    //ctrl.table.highestBet = ctrl.bet;
+    var currentPlayer = poker.getCurrentPlayer();
+    for (var i = 0; i < ctrl.table.players.length; i++) {
+      if (currentPlayer === ctrl.table.players[i].username) {
+        // if user tries to call/bet an amount less than the big blind/current bet
+        if ((ctrl.bet + ctrl.table.players[i].moneyOnStreet) < ctrl.table.highestBet) {
+          alert('You must call ' + (ctrl.table.highestBet - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
+                 'amount greater than or equal to ' + (ctrl.table.highestBet * 2) + ', or fold.');
+          return;
+          // if user tries to raise an illegal amount
+        } else if ((ctrl.bet + ctrl.table.players[i].moneyOnStreet) > ctrl.highestBet && ctrl.bet < (ctrl.table.highestBet * 2)) {
+            alert('You must call ' + (ctrl.table.highestBet - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
+               'amount greater than or equal to ' + (ctrl.table.highestBet * 2) + ', or fold.');
+          // if the user call the bigBlind
+        } else if ((ctrl.bet + ctrl.table.players[i].moneyOnStreet) === ctrl.table.highestBet) {
+            pokerSocket.emit('preFlopBet', {bet: ctrl.bet});
+          // if the user raises a legal amount
+        } else if ((ctrl.bet + ctrl.table.players[i].moneyOnStreet) >= (ctrl.table.highestBet * 2)) {
+            pokerSocket.emit('preFlopBet', {bet: ctrl.bet});
+        }
+      }
+    }
     ctrl.bet = '';
   };
 
   pokerSocket.on('preFlopBet', function(table){
     ctrl.table = table;
     ctrl.potSize = table.potSize;
-    ctrl.betSize = table.betSize;
+    ctrl.highestBet = table.highestBet;
+    // if (ctrl.highestBet == table.highestBet || ctrl.highestBet > table.highestBet) {
+    //   ctrl.highestBet = table.highestBet;
+    // } else if (ctrl.highestBet < table.bigBlind) {
+    //   ctrl.highestBet = table.bigBlind;
+    // }
     var currentPlayer = poker.getCurrentPlayer();
     for(var i = 0; i < ctrl.table.players.length; i++) {
       if (currentPlayer === ctrl.table.players[i].username) {
@@ -94,35 +121,33 @@ Start of Game
         ctrl.turnToAct = ctrl.table.players[i].turnToAct;
       }
     }
-    // for(var i = 0; i < ctrl.table.players.length; i++) {
-    //   if (currentPlayer === ctrl.table.players[i].username) {
-    //     // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
-    //     if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-    //       alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
-    //       return
-    //     }
-    //     // if you checks and has already paid the blind and noone has raised, the check is allowed
-    //   } else if (currentPlayer === ctrl.table.players[i].username) {
-    //       if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-    //         pokerSocket.emit('preFlopCheck');
-    //       }
-    //   }
-    // }
-  });
-
-  ctrl.check = function() {
-    var currentPlayer = poker.getCurrentPlayer();
     for(var i = 0; i < ctrl.table.players.length; i++) {
       if (currentPlayer === ctrl.table.players[i].username) {
         // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
-        if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
-                 'amount greater than or equal to ' + (ctrl.table.bigBlind * 2) + ', or fold.');
+        if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.highestBet < ctrl.table.bigBlind) {
+          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips.');
           return;
         }
         // if you checks and has already paid the blind and noone has raised, the check is allowed
       } else if (currentPlayer === ctrl.table.players[i].username) {
-          if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
+          if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.highestBet < ctrl.table.bigBlind) {
+            pokerSocket.emit('preFlopCheck');
+          }
+      }
+    }
+  });
+
+  ctrl.sendCheck = function() {
+    var currentPlayer = poker.getCurrentPlayer();
+    for(var i = 0; i < ctrl.table.players.length; i++) {
+      if (currentPlayer === ctrl.table.players[i].username) {
+        // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
+        if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind || ctrl.table.players[i].moneyOnStreet < ctrl.table.highestBet ) {
+          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
+                 'amount greater than or equal to ' + (ctrl.table.bigBlind * 2) + ', or fold.');
+          return;
+          // if user checks and has already paid the blind and noone has raised, the check is allowed
+        } else if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.players[i].moneyOnStreet == ctrl.table.highestBet ) {
             pokerSocket.emit('preFlopCheck');
           }
       }
@@ -142,7 +167,7 @@ Start of Game
     console.log('From preFlopCheck: ', table);
     ctrl.table = table;
     ctrl.potSize = table.potSize;
-    ctrl.betSize = table.betSize;
+    ctrl.highestBet = table.highestBet;
     var currentPlayer = poker.getCurrentPlayer();
     for(var i = 0; i < ctrl.table.players.length; i++) {
       if (currentPlayer === ctrl.table.players[i].username) {
@@ -150,22 +175,31 @@ Start of Game
         ctrl.turnToAct = ctrl.table.players[i].turnToAct;
       }
     }
+    // for(var i = 0; i < ctrl.table.players.length; i++) {
+    //   if (currentPlayer === ctrl.table.players[i].username) {
+    //     // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
+    //     if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.highestBet < ctrl.table.bigBlind) {
+    //       alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
+    //              'amount greater than or equal to ' + (ctrl.table.bigBlind * 2) + ' or fold.');
+    //       return
+    //     }
+    //     // if you checks and has already paid the blind and noone has raised, the check is allowed
+    //   } else if (currentPlayer === ctrl.table.players[i].username) {
+    //       if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.highestBet < ctrl.table.bigBlind) {
+    //         pokerSocket.emit('preFlopCheck');
+    //       }
+    //   }
+    // }
+  });
+
+  ctrl.sendFold = function() {
+    var currentPlayer = poker.getCurrentPlayer();
     for(var i = 0; i < ctrl.table.players.length; i++) {
       if (currentPlayer === ctrl.table.players[i].username) {
-        // if user checks but hasn't paid the blind or the bet is higher than the blind, get an alert.
-        if (ctrl.table.players[i].moneyOnStreet < ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-          alert('You must call ' + (ctrl.table.bigBlind - ctrl.table.players[i].moneyOnStreet) + ' chips, raise an ' +
-                 'amount greater than or equal to ' + (ctrl.table.bigBlind * 2) + ' or fold.');
-          return
-        }
-        // if you checks and has already paid the blind and noone has raised, the check is allowed
-      } else if (currentPlayer === ctrl.table.players[i].username) {
-          if (ctrl.table.players[i].moneyOnStreet == ctrl.table.bigBlind && ctrl.table.betSize < ctrl.table.bigBlind) {
-            pokerSocket.emit('preFlopCheck');
-          }
+        pokerSocket.emit('preFlopFold');
       }
     }
-  });
+  };
 
   /*----------------------------------------------------------------------------
   Flop
@@ -181,7 +215,7 @@ Start of Game
       ctrl.smallBlind = table.smallBlind;
       ctrl.bigBlind = table.bigBlind;
       ctrl.potSize = table.potSize;
-      ctrl.betSize = table.betSize;
+      ctrl.highestBet = table.highestBet;
       ctrl.flop = table.flop;
       ctrl.turn = table.turn;
       ctrl.river = table.river;
@@ -205,7 +239,7 @@ Start of Game
 // Receives flopRequest and updates flop array
   pokerSocket.on('flopRequest', function(table){
     ctrl.table = table;
-    ctrl.betSize = table.betSize;
+    ctrl.highestBet = table.highestBet;
     ctrl.flop = table.flop;
   });
 // Send turnRequest event

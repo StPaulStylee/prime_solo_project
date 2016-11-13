@@ -24,7 +24,7 @@
     <p>{{ game.potSize }}</p>
   </div>
   <div class='bet-size'>
-    <p>The bet to call is {{ game.betSize }}</p>
+    <p>The bet to call is {{ game.highestBet }}</p>
   </div>
 
   <ul ng-repeat=' player in game.table.players'>
@@ -96,8 +96,8 @@
         <button ng-click='game.bet = game.betSize'>Call</button>
       </div>
       <div id='check-fold-allIn'>
-        <button ng-click='game.check()'>Check</button>
-        <button ng-click='game.fold()'>Fold</button>
+        <button ng-click='game.sendCheck()'>Check</button>
+        <button ng-click='game.sendFold()'>Fold</button>
         <button type='click'>Min</button>
         <button type='click'>All-In</button>
       </div>
