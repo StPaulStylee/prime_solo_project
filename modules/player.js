@@ -6,7 +6,6 @@ function Player(socketID, username) {
   this.turnToAct = false;
   this.handCheck = false;
   this.handBet = false;
-  this.handFold = false;
   this.moneyOnStreet = 0;
   this.seat = '';
   this.chipStack = 1000;

@@ -81,6 +81,7 @@
   <div class='player-action'>
     <p>{{ game.username }}</p>
     <p>Your Stack: {{ game.chipStack }}</p>
+    <p>Chips on Street: {{ game.moneyOnStreet }}</p>
     <div class='hide-container' ng-show='game.turnToAct'>
     <form ng-submit='game.sendBet()'>
       <div id='bet-input'>

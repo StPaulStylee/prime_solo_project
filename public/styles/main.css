@@ -55,8 +55,14 @@ table {
 /*---------------------------------------------------------------------------
 Game View
 ----------------------------------------------------------------------------*/
+.community-cards ul {
+	text-align: center;
+}
+
 .community-cards ul li {
 	display: inline;
+	font-size: 30px;
+	font-weight: bold;
 }
 
 .table-info ul li {
@@ -89,6 +95,7 @@ Game View
 
 .player-cards {
   bottom: 0;
+	font-size: 30px;
   padding-left: 33%;
   width: 33%;
 }
@@ -98,4 +105,10 @@ Game View
   height: 100%;
   float: right;
   width: 33%;
+}
+
+.pot-size {
+	font-size: 20px;
+	font-weight: bold;
+	text-align: center;
 }

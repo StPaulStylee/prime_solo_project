@@ -62,7 +62,7 @@ function ensureAuthenticated(req, res, next) {
   }
 }
 
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 5000;
 var server = app. listen(port, function () {
   console.log('Listening on port ', server.address().port);
 });
@@ -72,33 +72,31 @@ var io = require('socket.io')(server);
 var Player = require('./modules/player');
 var Table = require('./modules/table');
 var Deck = require('./modules/deck');
-//var Gameplay = require('./modules/gameplay')
 
 // Global Setup Variables
 var table = new Table('Fish Fry', 5, 10);
 
-// var playersOnline = [];
 
+// Connect to socket.io
 io.on('connection', function(socket){
-
+  // When a user get logged in, create new player, add
+  // them to the table, and assign them a seat
   socket.on('playerLoggedIn', function(data){
     console.log('Data from login:', data);
     var player = new Player(socket.id, data.username);
     table.playerCount++
-    //playersOnline.push(player);
     table.players.push(player);
     table.seatAssign();
     console.log('Table from Login: ', table);
   });
-
+  // Chat socket that is available on table
   socket.on('chatMessage', function(msg){
     var player = findPlayer(socket, table);
     var message = { user: player.username, msg: msg.msg}
     io.emit('chatMessage', {username: player.username, msg: msg.msg})
-
-    //io.emit('chatMessage', {player.username: msg});
   });
 
+  // Emit table object upon reception of table key
   socket.on('table', function(){
     io.emit('table', table);
   });
@@ -106,7 +104,9 @@ io.on('connection', function(socket){
   /*----------------------------------------------------------------------------
   Start of Game
   ---------------------------------------------------------------------------*/
-
+  // On 'ready' increase ready count
+  // Once 3 'ready' make the deck, shuffle, and deal
+  // Then set dealer and first to act
   socket.on('ready', function(){
     table.readyCount++;
     console.log(table.readyCount);
@@ -115,6 +115,9 @@ io.on('connection', function(socket){
       setDealerStart();
       setTurnToActStart();
     }
+    // Then set the table property 'street' to Preflop
+    // and emit the table object
+    table.street = 'preflop';
     console.log('Dealer button', table.dealerButton);
     console.log('Table on Ready: ', table);
     io.emit('ready', table);
@@ -123,6 +126,11 @@ io.on('connection', function(socket){
   /*----------------------------------------------------------------------------
   Preflop
   ---------------------------------------------------------------------------*/
+  // On 'preflopBet' event, set player to player
+  // who triggered the event
+  // if the bet from the player is greather than
+  // the highest bet in the round, set that to the new
+  // highest bet amount
   socket.on('preFlopBet', function(bet){
     console.log('From pre flop BET event', bet);
     var player = findPlayer(socket, table);
@@ -130,51 +138,51 @@ io.on('connection', function(socket){
     if (bet.bet > table.highestBet) {
       table.highestBet = bet.bet
     }
+    // Then update the table and player objects and
+    // set turn to the next player
     table.potSize += bet.bet;
     table.betSize = bet.bet;
     player.chipStack -= bet.bet;
     player.moneyOnStreet += bet.bet
     player.handBet = true;
-    console.log(player);
-
     setTurnToAct();
+    console.log('Player AFTER pre flop BET event:', player);
     io.emit('preFlopBet', table);
   });
-
+  // On preFlopCheck event, set player to user who triggered
+  // the event and set there hand to 'checked'
+  // Then, set the turn to the next player
   socket.on('preFlopCheck', function(){
     var player = findPlayer(socket, table);
-    // if (player.moneyOnStreet < table.bigBlind) {
-    //   io.emit('preFlopCheckError');
-    // }
     player.handCheck = true;
-    // for (var i = 0; i < table.players.length; i++) {
-    //   if (table.players[i].handActive == true) {
-    //     if (table.players[i].handCheck == true) {
-    //
-    //     }
-    //     else if (table.players[i].handBet == true) {
-    //
-    //     }
-    //   }
-    // }
     console.log('findPlayer() from pre flop CHECK event', player);
     setTurnToAct();
     io.emit('preFlopCheck', table);
   });
-
-  socket.on('preFoldFold', function(){
+  // When a player folds, set the player to the user who
+  // triggerd it, deactive their hand, and move to the next player
+  socket.on('preFlopFold', function(){
     var player = findPlayer(socket, table);
     player.handActive = false;
     setTurnToAct();
+    console.log('Player after pre flop FOLD event: ', player);
+    io.emit('preFlopFold', table);
   });
 
   /*----------------------------------------------------------------------------
   Flop
   ---------------------------------------------------------------------------*/
-
+  // When plop is triggerd, reset all players 'moneyOnStreet'
+  // property back to zero
   socket.on('flopRequest', function(){
+    for (var i = 0; i < table.players.length; i++) {
+      table.players[i].moneyOnStreet = 0;
+    }
+    // set the last bet size to 0 and reset highest bet
+    // equal to the bigBlind
+    // Deal the flop
     table.betSize = 0;
-    table.highestBet = 0
+    table.highestBet = table.bigBlind;
     console.log('Recieved flopRequest');
     dealFlop();
     console.log('Flop Dealt:', table.flop);
@@ -185,25 +193,23 @@ io.on('connection', function(socket){
   });
 
 
-    /*----------------------------------------------------------------------------
-    Turn
-    ---------------------------------------------------------------------------*/
-
-  socket.on('turnRequest', function(){
-
+/*----------------------------------------------------------------------------
+Turn
+---------------------------------------------------------------------------*/
+    // Deal the turn on turn request
+    socket.on('turnRequest', function(){
     console.log('Received turnRequest');
     dealTurn();
     console.log('Turn Dealt: ', table.turn);
     console.log('Burn Cards: ', table.discard);
     console.log('Cards Remaining in Deck: ', table.deck.cards.length);
     io.emit('turnRequest', table)
-
   });
 
-  /*----------------------------------------------------------------------------
-  River
-  ---------------------------------------------------------------------------*/
-
+/*----------------------------------------------------------------------------
+River
+---------------------------------------------------------------------------*/
+  // Deal the river on river request
   socket.on('riverRequest', function(){
 
     console.log('Received riverRequest');
@@ -223,8 +229,13 @@ io.on('connection', function(socket){
   Next Hand Request
   ---------------------------------------------------------------------------*/
 
-  // Event that begins the next hand
+    // Event that begins the next hand
+    // Reset all players hands to active
     socket.on('nextHand', function(){
+      for(var i = 0; i < table.players.length; i++) {
+        table.players[i].handActive = true;
+      }
+      // Update the table object
       table.handsPlayed++;
       table.potSize = 0;
       table.betSize = 0;
@@ -244,7 +255,7 @@ io.on('connection', function(socket){
         console.log('Deck length on newHand:', table.deck.cards.length);
       });
 
-  // disconnect
+  // disconnect from socket.io
   socket.on('disconnect', function (){
     console.log('A user has disconnected.');
   });
@@ -257,17 +268,17 @@ io.on('connection', function(socket){
 
 
 
-
-
-
-
-
+/*----------------------------------------------------------------------------
+Functions
+---------------------------------------------------------------------------*/
+// Allows server to identify which player caused event
+// by their socket id
 function findPlayer(socket, table) {
   return table.players.filter(function(player){
     return player.id === socket.id;
   })[0];
 }
-
+// make the deck, shuffle it 3 times, and deal each player a hand
 var ready = function() {
     table.deck.makeDeck(1);
     table.deck.shuffle(3);
@@ -278,7 +289,7 @@ var ready = function() {
       table.players[i].hand.push(table.deck.deal());
     }
 };
-
+// Set the starting dealer and collect blinds
 var setDealerStart = function() {
   if (table.dealerButton < table.players.length && table.dealerButton == 0) {
     table.players[table.dealerButton].dealer = true;
@@ -290,44 +301,123 @@ var setDealerStart = function() {
     table.players[table.dealerButton + 2].moneyOnStreet = table.bigBlind;
     table.players[table.dealerButton + 2].bigBlind = true;
     table.dealerButton++;
-  //
-} //else if (table.dealerButton < table.players.length && table.dealerButton == 1) {
-  //   table.players[table.dealerButton].dealer = true;
-  //   table.dealterButton++;
-  //
-  // } else if (table.dealerButton < table.players.length && table.dealerButton == 2) {
-  //   table.players[table.dealerButton].dealer = true;
-  //   table.dealterButton++;
-  // }
+  }
 };
-
+// Set player whos turn it is, to their turn
 var setTurnToActStart = function() {
   table.players[table.seatToAct].turnToAct = true;
   table.seatToAct++;
 };
-
+// After start, set the players turn to act
 var setTurnToAct = function() {
-  
-  if (table.seatToAct < table.players.length && table.seatToAct == 0) {
-    table.players[table.players.length - 1].turnToAct = false;
-    table.players[table.seatToAct].turnToAct = true;
-    table.seatToAct++;
+  if (table.players[0].handActive == true && table.players[1].handActive == true && table.players[2].handActive == true){
+    console.log('All Active');
+    if (table.seatToAct < table.players.length && table.seatToAct == 0) {
+      table.players[table.players.length - 1].turnToAct = false;
+      table.players[table.seatToAct].turnToAct = true;
+      table.seatToAct++;
 
-  } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
-    table.players[table.seatToAct - 1].turnToAct = false;
-    table.players[table.seatToAct].turnToAct = true;
-    table.seatToAct++;
+    } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
+      table.players[table.seatToAct - 1].turnToAct = false;
+      table.players[table.seatToAct].turnToAct = true;
+      table.seatToAct++;
 
-  } else if (table.seatToAct < table.players.length && table.seatToAct == 2) {
-    table.players[table.seatToAct - 1].turnToAct = false;
-    table.players[table.seatToAct].turnToAct = true;
-    table.seatToAct++;
+    } else if (table.seatToAct < table.players.length && table.seatToAct == 2) {
+      table.players[table.seatToAct - 1].turnToAct = false;
+      table.players[table.seatToAct].turnToAct = true;
+      table.seatToAct++;
 
-  } else if (table.seatToAct == table.players.length) {
-    table.players[table.players.length - 1].turnToAct = false;
-    table.players[0].turnToAct = true;
-    table.seatToAct = 1;
-  }
+    } else if (table.seatToAct == table.players.length) {
+      table.players[table.players.length - 1].turnToAct = false;
+      table.players[0].turnToAct = true;
+      table.seatToAct = 1;
+      }
+    }
+
+  else if (table.players[0].handActive == true && table.players[1].handActive == true && table.players[2].handActive == false) {
+    console.log('Seat 1 and 2 Active');
+    table.players[2].turnToAct = false;
+    if (table.seatToAct < table.players.length && table.seatToAct == 0) {
+      console.log('Seat To Act == 0');
+      table.players[table.players.length - 1].turnToAct = false;
+      table.players[table.seatToAct].turnToAct = true;
+      table.seatToAct++;
+
+    } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
+      console.log('Seat to Atct == 1');
+      table.players[table.seatToAct - 1].turnToAct = false;
+      table.players[table.seatToAct].turnToAct = true;
+      table.seatToAct++;
+
+    } else if (table.seatToAct < table.players.length && table.seatToAct == 2) {
+      console.log('Seat to Act == 2');
+      table.players[table.seatToAct - 1].turnToAct = false;
+      table.players[table.seatToAct].turnToAct = false;
+      table.players[0].turnToAct = true;
+      table.seatToAct = 1;
+      }
+      else if (table.seatToAct == table.players.length) {
+        console.log('Seat To Act == 3');
+      table.players[0].turnToAct = true;
+      table.seatToAct = 1;
+      }
+    }
+
+    else if (table.players[0].handActive == true && table.players[1].handActive == false && table.players[2].handActive == true) {
+      console.log('Seat 1 and 3 Active');
+      table.players[1].turnToAct = false;
+      if (table.seatToAct < table.players.length && table.seatToAct == 0) {
+        console.log('Seat To Act == 0');
+        table.players[table.players.length - 1].turnToAct = false;
+        table.players[table.seatToAct].turnToAct = true;
+        table.seatToAct++;
+
+      } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
+        console.log('Seat to Atct == 1');
+        table.players[table.seatToAct - 1].turnToAct = false;
+        table.players[2].turnToAct = true;
+        table.seatToAct = 3;
+
+      } else if (table.seatToAct < table.players.length && table.seatToAct == 2) {
+        console.log('Seat to Act == 2');
+        table.players[table.seatToAct].turnToAct = true;
+        table.seatToAct = 3;
+        }
+        else if (table.seatToAct == table.players.length) {
+          console.log('Seat To Act == 3');
+        table.players[table.seatToAct - 1].turnToAct = false;
+        table.players[0].turnToAct = true;
+        table.seatToAct = 1;
+        }
+      }
+
+      else if (table.players[0].handActive == false && table.players[1].handActive == true && table.players[2].handActive == true){
+        console.log('Seats 2 and 3 Active');
+        if (table.seatToAct < table.players.length && table.seatToAct == 0) {
+          console.log('Seat to Act == 0');
+          // table.players[table.players.length - 1].turnToAct = false;
+          // table.players[table.seatToAct].turnToAct = true;
+          // table.seatToAct++;
+
+        } else if (table.seatToAct < table.players.length && table.seatToAct == 1) {
+          console.log('Seat to Act == 1');
+          table.players[table.seatToAct - 1].turnToAct = false;
+          table.players[table.seatToAct].turnToAct = true;
+          table.seatToAct++;
+
+        } else if (table.seatToAct < table.players.length && table.seatToAct == 2) {
+          console.log('Seat to Act == 2');
+          table.players[table.seatToAct - 1].turnToAct = false;
+          table.players[table.seatToAct].turnToAct = true;
+          table.seatToAct++;
+
+        } else if (table.seatToAct == table.players.length) {
+          console.log('Seat to Act == 3');
+          table.players[table.players.length - 1].turnToAct = false;
+          table.players[1].turnToAct = true;
+          table.seatToAct = 2;
+          }
+        }
 };
 
 var setDealer = function() {
@@ -396,7 +486,8 @@ var setDealer = function() {
 
     }
   };
-
+  // After each hand is completed, create a new deck,
+  // shuffle it 3 times, and deal each player a hand
   var dealHands = function() {
     table.deck.makeDeck(1);
     table.deck.shuffle(3);
@@ -407,25 +498,25 @@ var setDealer = function() {
       table.players[i].hand.push(table.deck.deal());
     }
   };
-
+  // Empty each players hand array
   var clearHands = function() {
     for(var i = 0; i < table.players.length; i++) {
       table.players[i].hand = [];
     }
   };
-
+  // deal the flop from the deck
   var dealFlop = function() {
     table.discard.push(table.deck.deal());
     table.flop.push(table.deck.deal());
     table.flop.push(table.deck.deal());
     table.flop.push(table.deck.deal());
   };
-
+  // deal the turn from the deck
   var dealTurn = function() {
     table.discard.push(table.deck.deal());
     table.turn.push(table.deck.deal());
   };
-
+  // deal the river from the deck
   var dealRiver = function() {
     table.discard.push(table.deck.deal());
     table.river.push(table.deck.deal());

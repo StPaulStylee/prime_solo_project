@@ -26,13 +26,7 @@ function pokerService($http, pokerSocket) {
   };
   pokerSocket.on('table', function(data){
     service.players =  data.players;
-    //console.log(service.players);
-    //service.table.length = 0;
     service.table = data;
-    // for(var i = 0; i < data.playerCount; i++) {
-    //   service.table.push(data['Seat ' + (i + 1)]);
-    // }
-    //console.log(service.table);
   });
 
   service.setCurrentPlayer = function (player) {

@@ -1,6 +1,7 @@
 var router = require('express').Router();
 const pool = require('../database/connection');
 
+// Request all columns from users table
 router.get('/', function(req, res){
   pool.connect(function(err, client, done){
     try {

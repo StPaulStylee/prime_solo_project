@@ -19,6 +19,7 @@ function Table (tableName, smallBlind, bigBlind) {
   this.turn = [];
   this.river = [];
   this.discard = [];
+  this.street = '';
 
 
   // this.seats = {};
