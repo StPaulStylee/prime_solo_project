@@ -12,7 +12,7 @@
     "angular": "^1.5.8",
     "angular-route": "^1.5.8",
     "angular-socket-io": "^0.7.0",
-    "bcrypt": "^0.8.7",
+    "bcryptjs": "^2.4.0",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "express-session": "^1.14.2",

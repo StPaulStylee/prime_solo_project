@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const SALT_ROUNDS = 10;
 const pool = require('../database/connection');
 
@@ -60,6 +60,7 @@ function create(type, username, password, bankroll) {
         if (err) {
           console.log('Error hashing password', err);
           return reject(err);
+        } else {
         }
 
         pool.connect(function(err, client, done){
